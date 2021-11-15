@@ -1,0 +1,7 @@
+*pycache*
+*pytest*
+*build*
+*externals*
+*egg-info*
+dist/*
+.vscode
