@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as requirements:
 
 setuptools.setup(
     name="cached_conv",
-    version="1.1-b2",
+    version="1.1-b3",
     author="Antoine CAILLON",
     author_email="caillon@ircam.fr",
     description="Tools allowing to use neural network inside realtime apps.",
