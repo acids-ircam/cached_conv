@@ -28,11 +28,11 @@ def get_padding(kernel_size, stride=1, dilation=1, mode="centered"):
         p_right = half_p
         p_left = half_p
     elif mode == "causal":
-        p_right = 2 * half_p
-        p_left = 0
-    elif mode == "anticausal":
         p_right = 0
         p_left = 2 * half_p
+    elif mode == "anticausal":
+        p_right = 2 * half_p
+        p_left = 0
     else:
         raise Exception(f"Padding mode {mode} is not valid")
     return (p_left, p_right)
