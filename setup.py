@@ -1,4 +1,5 @@
 import setuptools
+import subprocess
 
 with open("README.md", "r") as readme:
     readme = readme.read()
@@ -8,7 +9,11 @@ with open("requirements.txt", "r") as requirements:
 
 setuptools.setup(
     name="cached_conv",
-    version="1.1-b3",
+    version=subprocess.check_output([
+        "git",
+        "describe",
+        "--abbrev=0",
+    ]).strip().decode(),
     author="Antoine CAILLON",
     author_email="caillon@ircam.fr",
     description="Tools allowing to use neural network inside realtime apps.",
