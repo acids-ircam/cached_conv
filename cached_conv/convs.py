@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+MAX_BATCH_SIZE = 64
 
 def get_padding(kernel_size, stride=1, dilation=1, mode="centered"):
     """
@@ -66,7 +67,7 @@ class CachedPadding1d(nn.Module):
     @torch.no_grad()
     def init_cache(self, x):
         b, c, _ = x.shape
-        self.register_buffer("pad", torch.zeros(b, c, self.padding).to(x))
+        self.register_buffer("pad", torch.zeros(MAX_BATCH_SIZE, c, self.padding).to(x))
         self.initialized += 1
 
     def forward(self, x):
@@ -74,8 +75,8 @@ class CachedPadding1d(nn.Module):
             self.init_cache(x)
 
         if self.padding:
-            x = torch.cat([self.pad, x], -1)
-            self.pad.copy_(x[..., -self.padding:])
+            x = torch.cat([self.pad[:x.shape[0]], x], -1)
+            self.pad[:x.shape[0]].copy_(x[..., -self.padding:])
 
             if self.crop:
                 x = x[..., :-self.padding]
@@ -112,8 +113,6 @@ class CachedConv1d(nn.Conv1d):
         self.cache = CachedPadding1d(padding)
         self.downsampling_delay = CachedPadding1d(stride_delay, crop=True)
 
-    def script_cache(self):
-        self.cache = torch.jit.script(self.cache)
 
     def forward(self, x):
         x = self.downsampling_delay(x)
@@ -140,8 +139,6 @@ class CachedConvTranspose1d(nn.ConvTranspose1d):
         self.initialized = 0
         self.cumulative_delay = self.padding[0] + cd * stride
 
-    def script_cache(self):
-        self.cache = torch.jit.script(self.cache)
 
     @torch.jit.unused
     @torch.no_grad()
@@ -149,7 +146,7 @@ class CachedConvTranspose1d(nn.ConvTranspose1d):
         b, c, _ = x.shape
         self.register_buffer("cache",
                              torch.zeros(
-                                 b,
+                                 MAX_BATCH_SIZE,
                                  c,
                                  2 * self.padding[0],
                              ).to(x))
@@ -172,8 +169,8 @@ class CachedConvTranspose1d(nn.ConvTranspose1d):
 
         padding = 2 * self.padding[0]
 
-        x[..., :padding] += self.cache
-        self.cache.copy_(x[..., -padding:])
+        x[..., :padding] += self.cache[:x.shape[0]]
+        self.cache[:x.shape[0]].copy_(x[..., -padding:])
 
         x = x[..., :-padding]
 
