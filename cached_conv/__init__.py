@@ -2,6 +2,7 @@ import torch
 from .convs import get_padding, AlignBranches, CachedSequential, CachedPadding1d
 from .convs import Conv1d as _Conv1d, CachedConv1d
 from .convs import ConvTranspose1d as _ConvTranspose1d, CachedConvTranspose1d
+from .convs import MAX_BATCH_SIZE
 
 USE_BUFFER_CONV = False
 
