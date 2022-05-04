@@ -30,8 +30,12 @@ hparams_list = [
 
 @pytest.mark.parametrize("hparams", hparams_list)
 def test_conv_t(hparams):
+    cc.use_cached_conv(False)
     conv = cc.ConvTranspose1d(**hparams)
-    cconv = cc.CachedConvTranspose1d(**hparams)
+
+    cc.use_cached_conv(True)
+    cconv = cc.ConvTranspose1d(**hparams)
+
     cconv.weight.data.copy_(conv.weight.data)
     cconv.bias.data.copy_(conv.bias.data)
 

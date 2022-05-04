@@ -1,5 +1,6 @@
 import torch
-from .convs import get_padding, AlignBranches, CachedSequential, CachedPadding1d
+from .convs import get_padding, CachedSequential, CachedPadding1d
+from .convs import Branches, AlignBranches as _AlignBranches
 from .convs import Conv1d as _Conv1d, CachedConv1d
 from .convs import ConvTranspose1d as _ConvTranspose1d, CachedConvTranspose1d
 from .convs import MAX_BATCH_SIZE
@@ -18,6 +19,10 @@ def use_buffer_conv(state: bool):
     USE_BUFFER_CONV = state
 
 
+def use_cached_conv(state: bool):
+    use_buffer_conv(state)
+
+
 def Conv1d(*args, **kwargs):
     if USE_BUFFER_CONV:
         return CachedConv1d(*args, **kwargs)
@@ -30,3 +35,10 @@ def ConvTranspose1d(*args, **kwargs):
         return CachedConvTranspose1d(*args, **kwargs)
     else:
         return _ConvTranspose1d(*args, **kwargs)
+
+
+def AlignBranches(*args, **kwargs):
+    if USE_BUFFER_CONV:
+        return _AlignBranches(*args, **kwargs)
+    else:
+        return Branches(*args, **kwargs)
