@@ -32,6 +32,7 @@ def build_models(dim, kernels, strides):
 
     cum_delay = 0
     for k, s in zip(kernels, strides):
+        cc.use_cached_conv(False)
         layers.append(
             cc.Conv1d(
                 dim,
@@ -41,8 +42,10 @@ def build_models(dim, kernels, strides):
                 padding=cc.get_padding(k, s),
                 cumulative_delay=cum_delay,
             ))
+
+        cc.use_cached_conv(True)
         clayers.append(
-            cc.CachedConv1d(
+            cc.Conv1d(
                 dim,
                 dim,
                 k,
