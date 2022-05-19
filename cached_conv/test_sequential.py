@@ -26,13 +26,10 @@ hparams_list = [{
 }]
 
 
-def build_models(dim, kernels, strides):
+def build_model(dim, kernels, strides):
     layers = []
-    clayers = []
-
     cum_delay = 0
     for k, s in zip(kernels, strides):
-        cc.use_cached_conv(False)
         layers.append(
             cc.Conv1d(
                 dim,
@@ -42,37 +39,14 @@ def build_models(dim, kernels, strides):
                 padding=cc.get_padding(k, s),
                 cumulative_delay=cum_delay,
             ))
-
-        cc.use_cached_conv(True)
-        clayers.append(
-            cc.Conv1d(
-                dim,
-                dim,
-                k,
-                stride=s,
-                padding=cc.get_padding(k, s),
-                cumulative_delay=cum_delay,
-            ))
-        cum_delay = clayers[-1].cumulative_delay
+        cum_delay = layers[-1].cumulative_delay
 
     model = cc.CachedSequential(*layers)
-    cmodel = cc.CachedSequential(*clayers)
-
-    for i in range(len(model)):
-        model[i].weight.data.copy_(cmodel[i].weight.data)
-        model[i].bias.data.copy_(cmodel[i].bias.data)
-
-    return model, cmodel
+    return model
 
 
 @pytest.mark.parametrize("hparams", hparams_list)
 def test_sequential(hparams):
-    x = torch.randn(1, hparams["dim"], 2**14)
-    model, cmodel = build_models(**hparams)
-
-    fc = cmodel.cumulative_delay
-
-    y = model(x)[..., :-fc]
-    cy = cc.chunk_process(cmodel, x, 16)[..., fc:]
-
-    assert torch.allclose(y[..., fc:-fc], cy[..., fc:-fc], 1e-5, 1e-5)
+    model_constructor = lambda: build_model(**hparams)
+    input_tensor = torch.randn(1, hparams["dim"], 2**14)
+    assert cc.test_equal(model_constructor, input_tensor)

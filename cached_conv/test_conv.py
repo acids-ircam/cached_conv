@@ -35,18 +35,6 @@ hparams_list = [{
 
 @pytest.mark.parametrize("hparams", hparams_list)
 def test_conv(hparams):
-    cc.use_cached_conv(False)
-    conv = cc.Conv1d(**hparams)
-
-    cc.use_cached_conv(True)
-    cconv = cc.Conv1d(**hparams)
-
-    cconv.weight.data.copy_(conv.weight.data)
-    cconv.bias.data.copy_(conv.bias.data)
-
-    x = torch.randn(1, hparams["in_channels"], 2**14)
-    y = conv(x)[..., :-cconv.cumulative_delay]
-
-    cy = cc.chunk_process(cconv, x, 4)[..., cconv.cumulative_delay:]
-
-    assert torch.allclose(y, cy, 1e-5, 1e-5)
+    model_constructor = lambda: cc.Conv1d(**hparams)
+    input_tensor = torch.randn(1, hparams["in_channels"], 2**14)
+    assert cc.test_equal(model_constructor, input_tensor)
