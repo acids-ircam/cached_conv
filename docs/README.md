@@ -49,14 +49,36 @@ model = AutoEncoder()
 we now have a streamable model, i.e that can work on live streams ! We can now export it as a torchscript model
 
 ```python
+model.register_buffer("forward_params", torch.tensor([1, 1, 1, 1]))
 scripted_model = torch.jit.script(model)
 torch.jit.save(scripted_model, "exported_model.ts")
 ```
 
-And load it inside [nn~ for max/msp and PureData](https://github.com/acids-ircam/nn_tilde) for real-time neural audio processing !
+And load it inside [nn~ for max/msp and PureData](https://github.com/acids-ircam/nn_tilde) for real-time neural audio processing ! Note that nn~ requires a `METHOD_params` buffer in the model for each exported method. It must be a tensor with 4 values:
+
+- in channel number
+- in sampling rate divider (1 = audio rate, 100 = audio rate / 100)
+- out channel number
+- out sampling rate divider
+
+We can also export the encode method like this
+
+```python
+class AutoEncoder(nn.Module):
+    @torch.jit.export
+    def encode(self, x):
+        return self.encoder(x)
+
+...
+
+model = AutoEncoder()
+model.register_buffer("encode_params", torch.tensor([1, 1, 16, 8]))
+```
 
 ## Streamable RAVE for live audio processing
 
-Applying our method on the RAVE model allows its use on realtime audio signals.
+Applying our method on the RAVE model allows its use on realtime audio signals, on a wide range of platforms.
 
-[![RAVE x nn~](http://img.youtube.com/vi/dMZs04TzxUI/mqdefault.jpg)](https://www.youtube.com/watch?v=dMZs04TzxUI)
+|                                                    RAVE x nn~                                                     |                                                   embedded RAVE                                                   |
+| :---------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: |
+| [![RAVE x nn~](http://img.youtube.com/vi/dMZs04TzxUI/mqdefault.jpg)](https://www.youtube.com/watch?v=dMZs04TzxUI) | [![RAVE x nn~](http://img.youtube.com/vi/jAIRf4nGgYI/mqdefault.jpg)](https://www.youtube.com/watch?v=jAIRf4nGgYI) |
