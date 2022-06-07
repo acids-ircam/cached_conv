@@ -53,6 +53,10 @@ class CachedSequential(nn.Sequential):
         self.cumulative_delay += self[-1].cumulative_delay
 
 
+class Sequential(CachedSequential):
+    pass
+
+
 class CachedPadding1d(nn.Module):
     """
     Cached Padding implementation, replace zero padding with the end of

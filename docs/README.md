@@ -4,6 +4,57 @@ Deep learning models are mostly used in an offline inference fashion. However, t
 
 In this paper, we introduce a new method allowing to produce _non-causal streaming_ models. This allows to make any convolutional model compatible with real-time buffer-based processing. As our method is based on a post-training reconfiguration of the model, we show that it is able to transform models trained without causal constraints into a streaming model. We show how our method can be adapted to fit complex architectures with parallel branches. To evaluate our method, we apply it on the recent RAVE model, which provides high-quality real-time audio synthesis. We test our approach on multiple music and speech datasets and show that it is faster than overlap-add methods, while having no impact on the generation quality. Finally, we introduce two open-source implementation of our work as Max/MSP and PureData externals, and as a VST audio plugin. This allows to endow traditional digital audio workstations with real-time neural audio synthesis on any laptop CPU.
 
+## Building a Streamable Convolutional Neural Network
+
+Let's define a simple autoencoder model
+
+```python
+import torch
+import torch.nn as nn
+import cached_conv as cc
+
+class AutoEncoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder = cc.Sequential(
+            cc.Conv1d(1, 16, 3, stride=2, padding=1),
+            nn.ReLU(),
+            cc.Conv1d(16, 16, 3, stride=2, padding=1),
+            nn.ReLU(),
+            cc.Conv1d(16, 16, 3, stride=2, padding=1),
+        )
+
+        self.decoder = cc.Sequential(
+            cc.ConvTranspose1d(16, 16, 4, stride=2, padding=1),
+            nn.ReLU(),
+            cc.ConvTranspose1d(16, 16, 4, stride=2, padding=1),
+            nn.ReLU(),
+            cc.ConvTranspose1d(16, 1, 4, stride=2, padding=1),
+        )
+
+    def forward(self, x):
+        return self.decoder(self.encoder(x))
+```
+
+Notice that we use convolutions defined by the `cached_conv` package instead of `torch.nn`. If we stop here, we get a model that behaves exactly as its `torch.nn` counterpart. However, if we enable cached convs and then instanciate the model
+
+```python
+import cached_conv as cc
+
+cc.use_cached_conv(True)
+
+model = AutoEncoder()
+```
+
+we now have a streamable model, i.e that can work on live streams ! We can now export it as a torchscript model
+
+```python
+scripted_model = torch.jit.script(model)
+torch.jit.save(scripted_model, "exported_model.ts")
+```
+
+And load it inside [nn~ for max/msp and PureData](https://github.com/acids-ircam/nn_tilde) for real-time neural audio processing !
+
 ## Streamable RAVE for live audio processing
 
 Applying our method on the RAVE model allows its use on realtime audio signals.
