@@ -83,3 +83,19 @@ class AutoEncoder(nn.Module):
 model = AutoEncoder()
 model.register_buffer("encode_params", torch.tensor([1, 1, 16, 8]))
 ```
+
+## Realtime applications
+
+### [nn~](https://github.com/acids-ircam/nn_tilde)
+
+The **nn~** external for max/msp and PureData allows to interface pre-trained deep learning models in a graphical way, giving full control to the user on the different dimensions of input and output tensors.
+
+![max_msp_screenshot](docs/maxmsp_screenshot.png)
+
+
+### [RAVE vst](https://github.com/acids-ircam/rave_vst)
+
+The RAVE vst is a VST2/VST3/AU plugin designed to allow the use of the [RAVE model](https://github.com/acids-ircam/RAVE) inside regular digital audio workstations such as Ableton Live or Bitwig Studio.
+
+![plugin_screenshot](https://github.com/acids-ircam/rave_vst/blob/main/assets/rave_screenshot_audio_panel.png?raw=true)
+
