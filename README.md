@@ -90,7 +90,7 @@ model.register_buffer("encode_params", torch.tensor([1, 1, 16, 8]))
 
 The **nn~** external for max/msp and PureData allows to interface pre-trained deep learning models in a graphical way, giving full control to the user on the different dimensions of input and output tensors.
 
-![max_msp_screenshot](docs/maxmsp_screenshot.png)
+![max_msp_screenshot](https://github.com/acids-ircam/RAVE/raw/master/docs/maxmsp_screenshot.png)
 
 
 ### [RAVE vst](https://github.com/acids-ircam/rave_vst)
