@@ -121,9 +121,22 @@ class CachedConv1d(nn.Conv1d):
         self.downsampling_delay = CachedPadding1d(stride_delay, crop=True)
 
     def forward(self, x):
+        """
+        if x.dim()==4, it is assumed that the
+        penultimate dimension contains different
+        channels of audio (such as those recorded
+        by a microphone array), and each channel
+        is convolved in parallel.
+        """
+        _nchans=0
+        b = x.size()[0]
+        if x.dim() == 4: # multi-channel audio support
+            nchans = x.size()[-2]
+            x = x.permute(0,2,1,3)
+            x = torch.flatten(x,end_dim=1)
         x = self.downsampling_delay(x)
         x = self.cache(x)
-        return nn.functional.conv1d(
+        out = nn.functional.conv1d(
             x,
             self.weight,
             self.bias,
@@ -132,6 +145,11 @@ class CachedConv1d(nn.Conv1d):
             self.dilation,
             self.groups,
         )
+        if _nchans: # multi-channel audio support
+            _,ch_out,T=out.size()
+            out = out.reshape((b,_nchans,ch_out,T))
+            out = out.permute(0,2,1,3)
+        return out
 
 
 class CachedConvTranspose1d(nn.ConvTranspose1d):
@@ -203,8 +221,21 @@ class Conv1d(nn.Conv1d):
         self.cumulative_delay = 0
 
     def forward(self, x):
+        """
+        if x.dim()==4, it is assumed that the
+        penultimate dimension contains different
+        channels of audio (such as those recorded
+        by a microphone array), and each channel
+        is convolved in parallel.
+        """
+        _nchans=0
+        b = x.size()[0]
+        if x.dim() == 4: # multi-channel audio support
+            nchans = x.size()[-2]
+            x = x.permute(0,2,1,3)
+            x = torch.flatten(x,end_dim=1)
         x = nn.functional.pad(x, self._pad)
-        return nn.functional.conv1d(
+        out = nn.functional.conv1d(
             x,
             self.weight,
             self.bias,
@@ -213,6 +244,11 @@ class Conv1d(nn.Conv1d):
             self.dilation,
             self.groups,
         )
+        if _nchans: # multi-channel audio support
+            _,ch_out,T=out.size()
+            out = out.reshape((b,_nchans,ch_out,T))
+            out = out.permute(0,2,1,3)
+        return out
 
 
 class AlignBranches(nn.Module):
