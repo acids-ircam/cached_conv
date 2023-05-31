@@ -1,5 +1,6 @@
-import torch
 import pytest
+import torch
+
 import cached_conv as cc
 
 torch.set_grad_enabled(False)

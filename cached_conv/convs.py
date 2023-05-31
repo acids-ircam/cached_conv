@@ -44,13 +44,22 @@ class CachedSequential(nn.Sequential):
     """
     Sequential operations with future compensation tracking
     """
+
     def __init__(self, *args, **kwargs):
         cumulative_delay = kwargs.pop("cumulative_delay", 0)
         stride = kwargs.pop("stride", 1)
         super().__init__(*args, **kwargs)
 
         self.cumulative_delay = int(cumulative_delay) * stride
-        self.cumulative_delay += self[-1].cumulative_delay
+
+        last_delay = 0
+        for i in range(1, len(self) + 1):
+            try:
+                last_delay = self[-i].cumulative_delay
+                break
+            except AttributeError:
+                pass
+        self.cumulative_delay += last_delay
 
 
 class Sequential(CachedSequential):
@@ -62,6 +71,7 @@ class CachedPadding1d(nn.Module):
     Cached Padding implementation, replace zero padding with the end of
     the previous tensor.
     """
+
     def __init__(self, padding, crop=False):
         super().__init__()
         self.initialized = 0
@@ -95,6 +105,7 @@ class CachedConv1d(nn.Conv1d):
     """
     Implementation of a Conv1d operation with cached padding
     """
+
     def __init__(self, *args, **kwargs):
         padding = kwargs.get("padding", 0)
         cumulative_delay = kwargs.pop("cumulative_delay", 0)
@@ -138,6 +149,7 @@ class CachedConvTranspose1d(nn.ConvTranspose1d):
     """
     Implementation of a ConvTranspose1d operation with cached padding
     """
+
     def __init__(self, *args, **kwargs):
         cd = kwargs.pop("cumulative_delay", 0)
         super().__init__(*args, **kwargs)
@@ -187,6 +199,7 @@ class CachedConvTranspose1d(nn.ConvTranspose1d):
 
 
 class ConvTranspose1d(nn.ConvTranspose1d):
+
     def __init__(self, *args, **kwargs) -> None:
         kwargs.pop("cumulative_delay", 0)
         super().__init__(*args, **kwargs)
@@ -194,6 +207,7 @@ class ConvTranspose1d(nn.ConvTranspose1d):
 
 
 class Conv1d(nn.Conv1d):
+
     def __init__(self, *args, **kwargs):
         self._pad = kwargs.get("padding", (0, 0))
         kwargs.pop("cumulative_delay", 0)
@@ -216,6 +230,7 @@ class Conv1d(nn.Conv1d):
 
 
 class AlignBranches(nn.Module):
+
     def __init__(self, *branches, delays=None, cumulative_delay=0, stride=1):
         super().__init__()
         self.branches = nn.ModuleList(branches)
@@ -241,6 +256,7 @@ class AlignBranches(nn.Module):
 
 
 class Branches(nn.Module):
+
     def __init__(self, *branches, delays=None, cumulative_delay=0, stride=1):
         super().__init__()
         self.branches = nn.ModuleList(branches)

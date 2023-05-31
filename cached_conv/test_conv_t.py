@@ -1,7 +1,8 @@
 import pytest
 import torch
-import cached_conv as cc
 import torch.nn as nn
+
+import cached_conv as cc
 
 hparams_list = [
     {

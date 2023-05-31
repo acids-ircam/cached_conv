@@ -1,5 +1,6 @@
-import setuptools
 import subprocess
+
+import setuptools
 
 with open("README.md", "r") as readme:
     readme = readme.read()

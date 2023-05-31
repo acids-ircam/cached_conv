@@ -1,8 +1,10 @@
+import copy
+
 import pytest
-import cached_conv as cc
 import torch
 import torch.nn as nn
-import copy
+
+import cached_conv as cc
 
 
 def test_residual():

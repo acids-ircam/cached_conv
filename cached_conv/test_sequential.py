@@ -1,7 +1,8 @@
-import pytest
-import cached_conv as cc
-import torch
 import matplotlib.pyplot as plt
+import pytest
+import torch
+
+import cached_conv as cc
 
 hparams_list = [{
     "dim": 1,
