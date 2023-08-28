@@ -39,3 +39,5 @@ def test_conv(hparams):
     model_constructor = lambda: cc.Conv1d(**hparams)
     input_tensor = torch.randn(1, hparams["in_channels"], 2**14)
     assert cc.test_equal(model_constructor, input_tensor)
+    input_tensor_multichannel = torch.randn(2, hparams["in_channels"], 5, 2**14)
+    assert cc.test_equal(model_constructor, input_tensor_multichannel)
